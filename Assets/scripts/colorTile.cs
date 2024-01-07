@@ -27,8 +27,8 @@ public class colorTile : MonoBehaviour
             if (isEmpty) {
                 tilemap.SetTile(pos, tile);
                 paintedTiles.Add(pos);
-
-                checkForVictory(pos, tile);
+                // if (paintedTiles.Count >= 11) // TODO
+                checkForVictory(pos, tile); 
                 // switchPlayer();
             }
         }
@@ -80,19 +80,40 @@ public class colorTile : MonoBehaviour
     }
 
     void checkCircle1(Vector3Int[] sequence, Tile tile){
-        Vector3Int[] remainingElements;
+        if (sequence.Length != 3 )  Debug.Log("sequence.Length: " + sequence.Length);
+        Vector3Int[] remainingElements = Array.Empty<Vector3Int>();
         if ((sequence[0].y!=sequence[1].y) && (sequence[1].y!=sequence[2].y) && (sequence[2].y!=sequence[0].y)){
-            if ((sequence[1].x>sequence[0].x) || (sequence[1].x>sequence[2].x)){
-                remainingElements = new [] { new Vector3Int(sequence[0].x-1, sequence[0].y, 0), new Vector3Int(sequence[1].x-2, sequence[1].y, 0), new Vector3Int(sequence[2].x-1, sequence[2].y, 0) };
-            }
-            else {
-                remainingElements = new [] { new Vector3Int(sequence[0].x+1, sequence[0].y, 0), new Vector3Int(sequence[1].x+2, sequence[1].y, 0), new Vector3Int(sequence[2].x+1, sequence[2].y, 0) };
+            if (sequence[1].y%2==0){
+                if ((sequence[1].x>sequence[0].x) && (sequence[1].x>sequence[2].x)) {
+                    remainingElements = new [] { new Vector3Int(sequence[0].x-1, sequence[0].y, 0), new Vector3Int (sequence[1].x-2, sequence[1].y, 0), new Vector3Int (sequence[2].x-1, sequence[2].y, 0)};
+                } else {
+                    remainingElements = new [] { new Vector3Int(sequence[0].x+1, sequence[0].y, 0), new Vector3Int (sequence[1].x+2, sequence[1].y, 0), new Vector3Int (sequence[2].x+1, sequence[2].y, 0)};
+                }
+            } else {
+                if ((sequence[1].x<sequence[0].x) && (sequence[1].x<sequence[2].x)) {
+                    remainingElements = new [] { new Vector3Int(sequence[0].x+1, sequence[0].y, 0), new Vector3Int (sequence[1].x+2, sequence[1].y, 0), new Vector3Int (sequence[2].x+1, sequence[2].y, 0)};
+                } else {
+                    remainingElements = new [] { new Vector3Int(sequence[0].x-1, sequence[0].y, 0), new Vector3Int (sequence[1].x-2, sequence[1].y, 0), new Vector3Int (sequence[2].x-1, sequence[2].y, 0)};
+                }
             }
         } else {
-            remainingElements = new [] { new Vector3Int(sequence[0].x+1, sequence[0].y, 0), new Vector3Int(sequence[1].x+2, sequence[1].y, 0), new Vector3Int(sequence[2].x+1, sequence[2].y, 0) };
+            Vector3Int[] twoTilesOnSameY = Array.Empty<Vector3Int>();
+            Vector3Int soloYTile;
+            if (sequence[0].y == sequence[1].y) {
+                twoTilesOnSameY = new [] { sequence[0], sequence[1] };
+                soloYTile = sequence[2];
+            } else {
+                twoTilesOnSameY = new [] { sequence[1], sequence[2] };
+                soloYTile = sequence[0];
+            }
+            Vector3Int[] remainingTwoTilesOnSameY = twoTilesOnSameY[0].y > soloYTile.y ? new [] { new Vector3Int(twoTilesOnSameY[0].x, twoTilesOnSameY[0].y-2, 0), new Vector3Int(twoTilesOnSameY[1].x, twoTilesOnSameY[1].y-2, 0) } : new [] { new Vector3Int(twoTilesOnSameY[0].x, twoTilesOnSameY[0].y+2, 0), new Vector3Int(twoTilesOnSameY[1].x, twoTilesOnSameY[1].y+2, 0) };
+            Vector3Int remainingSoloYTile = twoTilesOnSameY[0].x > soloYTile.x || twoTilesOnSameY[1].x > soloYTile.x ? new Vector3Int (soloYTile.x+2, soloYTile.y, 0) : new Vector3Int (soloYTile.x-2, soloYTile.y, 0);
+            remainingElements = new [] { remainingSoloYTile, remainingTwoTilesOnSameY [0], remainingTwoTilesOnSameY[1] };
         }
-        if(checkTiles(remainingElements, tile)) {
-            Debug.Log(tile + " wins!");
+
+        //victory check
+        if((remainingElements.Length == 3) && (checkTiles(remainingElements, tile))) {
+            Debug.Log(tile + " wins by circle victory!");
             // UnityEditor.EditorApplication.isPlaying = false;
         }
     }
@@ -127,7 +148,7 @@ public class colorTile : MonoBehaviour
         }
         Vector3Int[] tileSequence = new [] { start, new Vector3Int(start.x+1,start.y,0), new Vector3Int(start.x+2,start.y,0), new Vector3Int(start.x+3,start.y,0), new Vector3Int(start.x+4,start.y,0), new Vector3Int(start.x+5,start.y,0)};
         if(checkTiles(tileSequence, tile)) {
-            Debug.Log(tile + " wins!");
+            Debug.Log(tile + " wins by line victory!");
             UnityEditor.EditorApplication.isPlaying = false;
         }
     }
@@ -145,7 +166,7 @@ public class colorTile : MonoBehaviour
         if (start.y%2==0) tileSequence = new [] { start, new Vector3Int(start.x,start.y-1,0), new Vector3Int(start.x+1,start.y-2,0), new Vector3Int(start.x+1,start.y-3,0), new Vector3Int(start.x+2,start.y-4,0), new Vector3Int(start.x+2,start.y-5,0)};
         else tileSequence = new [] { start, new Vector3Int(start.x+1,start.y-1,0), new Vector3Int(start.x+1,start.y-2,0), new Vector3Int(start.x+2,start.y-3,0), new Vector3Int(start.x+2,start.y-4,0), new Vector3Int(start.x+3,start.y-5,0)};
         if(checkTiles(tileSequence, tile)) {
-            Debug.Log(tile + " wins!");
+            Debug.Log(tile + " wins by line victory!");
             UnityEditor.EditorApplication.isPlaying = false;
         }
     }
@@ -163,7 +184,7 @@ public class colorTile : MonoBehaviour
         if (start.y%2==0) tileSequence = new [] { start, new Vector3Int(start.x-1,start.y-1,0), new Vector3Int(start.x-1,start.y-2,0), new Vector3Int(start.x-2,start.y-3,0), new Vector3Int(start.x-2,start.y-4,0), new Vector3Int(start.x-3,start.y-5,0)};
         else tileSequence = new [] { start, new Vector3Int(start.x,start.y-1,0), new Vector3Int(start.x-1,start.y-2,0), new Vector3Int(start.x-1,start.y-3,0), new Vector3Int(start.x-2,start.y-4,0), new Vector3Int(start.x-2,start.y-5,0)};
         if(checkTiles(tileSequence, tile)) {
-            Debug.Log(tile + " wins!");
+            Debug.Log(tile + " wins by line victory!");
             UnityEditor.EditorApplication.isPlaying = false;
         }
     }
