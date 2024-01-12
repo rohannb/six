@@ -59,8 +59,34 @@ public class colorTile : MonoBehaviour
     }
 
     void checkForVictory(Vector3Int pos, Tile tile){
-        // checkForLineVictory(pos, tile);
+        checkForLineVictory(pos, tile);
         checkForCircleVictory(pos, tile);
+        checkForTriangleVictory(pos, tile);
+    }
+
+    void checkForTriangleVictory(Vector3Int pos, Tile tile) {
+        checkTriangleMidVictory(pos, tile);
+        checkTriangleEdgeVictory(pos, tile);
+    }
+
+    void checkTriangleMidVictory(Vector3Int pos, Tile tile) {
+        Vector3Int[] neighbours = getNeighbourTiles(pos);
+        if (checkTiles(new[] { neighbours[0], neighbours[1], neighbours[2], neighbours[3] }, tile)) checkTriangleMidVictory1(new[] { neighbours[0], neighbours[1], neighbours[2], neighbours[3] }, tile);
+        if (checkTiles(new[] { neighbours[1], neighbours[2], neighbours[3], neighbours[4] }, tile)) checkTriangleMidVictory1(new[] { neighbours[1], neighbours[2], neighbours[3], neighbours[4] }, tile);
+        if (checkTiles(new[] { neighbours[2], neighbours[3], neighbours[4], neighbours[5] }, tile)) checkTriangleMidVictory1(new[] { neighbours[2], neighbours[3], neighbours[4], neighbours[5] }, tile);
+        if (checkTiles(new[] { neighbours[3], neighbours[4], neighbours[5], neighbours[0] }, tile)) checkTriangleMidVictory1(new[] { neighbours[3], neighbours[4], neighbours[5], neighbours[0] }, tile);
+        if (checkTiles(new[] { neighbours[4], neighbours[5], neighbours[0], neighbours[1] }, tile)) checkTriangleMidVictory1(new[] { neighbours[4], neighbours[5], neighbours[0], neighbours[1] }, tile);
+        if (checkTiles(new[] { neighbours[5], neighbours[0], neighbours[1], neighbours[2] }, tile)) checkTriangleMidVictory1(new[] { neighbours[5], neighbours[0], neighbours[1], neighbours[2] }, tile);
+    }
+
+    void checkTriangleEdgeVictory(Vector3Int pos, Tile tile) {
+        Vector3Int[] neighbours = getNeighbourTiles(pos);
+        if (checkTiles(new[] { neighbours[0], neighbours[1] }, tile)) checkTriangleMidVictory(neighbours[0], tile);
+        if (checkTiles(new[] { neighbours[1], neighbours[2] }, tile)) checkTriangleMidVictory(neighbours[1], tile);
+        if (checkTiles(new[] { neighbours[2], neighbours[3] }, tile)) checkTriangleMidVictory(neighbours[2], tile);
+        if (checkTiles(new[] { neighbours[3], neighbours[4] }, tile)) checkTriangleMidVictory(neighbours[3], tile);
+        if (checkTiles(new[] { neighbours[4], neighbours[5] }, tile)) checkTriangleMidVictory(neighbours[4], tile);
+        if (checkTiles(new[] { neighbours[5], neighbours[0] }, tile)) checkTriangleMidVictory(neighbours[5], tile);
     }
 
     void checkForLineVictory(Vector3Int pos, Tile tile){
@@ -77,6 +103,24 @@ public class colorTile : MonoBehaviour
         if (checkTiles(new []{neighbours[3], neighbours[5]}, tile))  checkCircle1(new []{neighbours[3], pos, neighbours[5]}, tile);
         if (checkTiles(new []{neighbours[4], neighbours[0]}, tile))  checkCircle1(new []{neighbours[4], pos, neighbours[0]}, tile);
         if (checkTiles(new []{neighbours[5], neighbours[1]}, tile))  checkCircle1(new []{neighbours[5], pos, neighbours[1]}, tile);
+    }
+
+    void checkTriangleMidVictory1(Vector3Int[] sequence, Tile tile)
+    {
+        Vector3Int finalTile = new Vector3Int();
+        if (sequence[0].y == sequence[1].y) {
+            finalTile.x = sequence[1].x > sequence[0].x ? sequence[1].x + 1 : sequence[1].x - 1;
+            finalTile.y = sequence[0].y;
+        } 
+        else if (sequence[2].y == sequence[3].y) {
+            finalTile.x = sequence[2].x > sequence[3].x ? sequence[2].x + 1 : sequence[2].x - 1;
+            finalTile.y = sequence[2].y;
+        } 
+        else {
+            finalTile.y = sequence[1].y > sequence[0].y ? sequence[1].y + 1 : sequence[1].y - 1;
+            finalTile.x = sequence[0].x == sequence[1].x ? sequence[2].x : sequence[1].x;
+        }
+        if (checkTiles(new[] { finalTile }, tile)) declareVictory("triangle", tile);
     }
 
     void checkCircle1(Vector3Int[] sequence, Tile tile){
@@ -112,10 +156,7 @@ public class colorTile : MonoBehaviour
         }
 
         //victory check
-        if((remainingElements.Length == 3) && (checkTiles(remainingElements, tile))) {
-            Debug.Log(tile + " wins by circle victory!");
-            // UnityEditor.EditorApplication.isPlaying = false;
-        }
+        if ((remainingElements.Length == 3) && (checkTiles(remainingElements, tile))) declareVictory("circle", tile);
     }
 
     dynamic getNeighbourTiles(Vector3Int pos) {
@@ -147,10 +188,7 @@ public class colorTile : MonoBehaviour
             previousTileType = tilemap.GetTile(previousTile);
         }
         Vector3Int[] tileSequence = new [] { start, new Vector3Int(start.x+1,start.y,0), new Vector3Int(start.x+2,start.y,0), new Vector3Int(start.x+3,start.y,0), new Vector3Int(start.x+4,start.y,0), new Vector3Int(start.x+5,start.y,0)};
-        if(checkTiles(tileSequence, tile)) {
-            Debug.Log(tile + " wins by line victory!");
-            UnityEditor.EditorApplication.isPlaying = false;
-        }
+        if (checkTiles(tileSequence, tile)) declareVictory("line", tile);
     }
 
     void checkLine2(Vector3Int pos, Tile tile){
@@ -165,10 +203,7 @@ public class colorTile : MonoBehaviour
         }
         if (start.y%2==0) tileSequence = new [] { start, new Vector3Int(start.x,start.y-1,0), new Vector3Int(start.x+1,start.y-2,0), new Vector3Int(start.x+1,start.y-3,0), new Vector3Int(start.x+2,start.y-4,0), new Vector3Int(start.x+2,start.y-5,0)};
         else tileSequence = new [] { start, new Vector3Int(start.x+1,start.y-1,0), new Vector3Int(start.x+1,start.y-2,0), new Vector3Int(start.x+2,start.y-3,0), new Vector3Int(start.x+2,start.y-4,0), new Vector3Int(start.x+3,start.y-5,0)};
-        if(checkTiles(tileSequence, tile)) {
-            Debug.Log(tile + " wins by line victory!");
-            UnityEditor.EditorApplication.isPlaying = false;
-        }
+        if (checkTiles(tileSequence, tile)) declareVictory("line", tile);
     }
 
     void checkLine3(Vector3Int pos, Tile tile){
@@ -183,10 +218,7 @@ public class colorTile : MonoBehaviour
         }
         if (start.y%2==0) tileSequence = new [] { start, new Vector3Int(start.x-1,start.y-1,0), new Vector3Int(start.x-1,start.y-2,0), new Vector3Int(start.x-2,start.y-3,0), new Vector3Int(start.x-2,start.y-4,0), new Vector3Int(start.x-3,start.y-5,0)};
         else tileSequence = new [] { start, new Vector3Int(start.x,start.y-1,0), new Vector3Int(start.x-1,start.y-2,0), new Vector3Int(start.x-1,start.y-3,0), new Vector3Int(start.x-2,start.y-4,0), new Vector3Int(start.x-2,start.y-5,0)};
-        if(checkTiles(tileSequence, tile)) {
-            Debug.Log(tile + " wins by line victory!");
-            UnityEditor.EditorApplication.isPlaying = false;
-        }
+        if (checkTiles(tileSequence, tile)) declareVictory("line", tile);
     }
 
     bool checkTiles(Vector3Int[] sequence, Tile tile){
@@ -197,5 +229,10 @@ public class colorTile : MonoBehaviour
         Array.ForEach(tileArray, currentTile=>{
             tilemap.SetTile(currentTile, null);
         });
+    }
+
+    void declareVictory(string type, Tile tile) {
+        Debug.Log(tile + " wins by " + type + " victory!");
+        UnityEditor.EditorApplication.isPlaying = false;
     }
 }
